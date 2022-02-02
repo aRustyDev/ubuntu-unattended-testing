@@ -77,7 +77,7 @@ function breakpoint {
 }
 
 function debug_msg {
-    if [DEBUG]; then
+    if [$DEBUG]; then
         printf $1
     fi
 }
