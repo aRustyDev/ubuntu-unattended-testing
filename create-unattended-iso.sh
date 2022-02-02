@@ -61,7 +61,7 @@ function usage {
 }
 
 function breakpoint {
-    if [DEBUG]; then
+    if $DEBUG ; then
         echo " +---------------------------+"
         echo " | press any key to continue |"
         echo " +---------------------------+"
@@ -77,7 +77,7 @@ function breakpoint {
 }
 
 function debug_msg {
-    if [$DEBUG]; then
+    if $DEBUG ; then
         printf $1
     fi
 }
