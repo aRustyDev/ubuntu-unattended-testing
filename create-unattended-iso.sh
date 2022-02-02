@@ -120,13 +120,6 @@ fi
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: getting latest versions of ubuntu"
 
-#check that we are in ubuntu 16.04+
-
-case "$(lsb_release -rs)" in
-    16*|18*) ub1604="yes" ;;
-    *) ub1604="" ;;
-esac
-
 #get the latest versions of Ubuntu LTS
 tmphtml=$tmp/tmphtml
 rm $tmphtml >/dev/null 2>&1
@@ -292,6 +285,13 @@ for i in $( echo rpm dpkg pacman ); do
                 (apt-get -y install whois genisoimage > /dev/null 2>&1) &
                 spinner $!
             fi
+            
+            #check that we are in ubuntu 16.04+
+            case "$(lsb_release -rs)" in
+                16*|18*) ub1604="yes" ;;
+                *) ub1604="" ;;
+            esac
+
             if [[ $bootable == "yes" ]] || [[ $bootable == "y" ]]; then
                 if [ $(program_is_installed "isohybrid") -eq 0 ]; then
                 #16.04
@@ -309,23 +309,13 @@ for i in $( echo rpm dpkg pacman ); do
         *rpm)
             debug_msg " :DEBUG: "
             echo " installing required packages"
-            if [ $(program_is_installed "mkpasswd") -eq 0 ] || [ $(program_is_installed "mkisofs") -eq 0 ]; then
-                (dpkg -y update > /dev/null 2>&1) &
-                spinner $!
-                (dpkg -y install whois genisoimage > /dev/null 2>&1) &
-                spinner $!
-            fi
+            (dpkg -y update > /dev/null 2>&1) &
+            spinner $!
+            (dpkg -y install whois genisoimage > /dev/null 2>&1) &
+            spinner $!
             if [[ $bootable == "yes" ]] || [[ $bootable == "y" ]]; then
-                if [ $(program_is_installed "isohybrid") -eq 0 ]; then
-                #16.04
-                if [[ $ub1604 == "yes" || $(grep -oP '(?<=\().*(?=\))' /etc/redhat-release) == "artful" ]]; then
-                    (dpkg -y install syslinux syslinux-utils > /dev/null 2>&1) &
-                    spinner $!
-                else
-                    (dpkg -y install syslinux > /dev/null 2>&1) &
-                    spinner $!
-                fi
-                fi
+                (dpkg -y install syslinux syslinux-utils > /dev/null 2>&1) &
+                spinner $!
             fi
             break
             ;;
@@ -334,23 +324,13 @@ for i in $( echo rpm dpkg pacman ); do
             echo " you're using Arch"
             debug_msg " :DEBUG: "
             echo " installing required packages"
-            if [ $(program_is_installed "mkpasswd") -eq 0 ] || [ $(program_is_installed "mkisofs") -eq 0 ]; then
-                (pacman -Syu > /dev/null 2>&1) &
-                spinner $!
-                (pacman -S whois genisoimage > /dev/null 2>&1) &
-                spinner $!
-            fi
+            (pacman -Syu > /dev/null 2>&1) &
+            spinner $!
+            (pacman -S whois genisoimage > /dev/null 2>&1) &
+            spinner $!
             if [[ $bootable == "yes" ]] || [[ $bootable == "y" ]]; then
-                if [ $(program_is_installed "isohybrid") -eq 0 ]; then
-                #16.04
-                if [[ $ub1604 == "yes" || $(lsb_release -cs) == "artful" ]]; then
-                    (pacman -S syslinux syslinux-utils > /dev/null 2>&1) &
-                    spinner $!
-                else
-                    (pacman -S syslinux > /dev/null 2>&1) &
-                    spinner $!
-                fi
-                fi
+                (pacman -S syslinux syslinux-utils > /dev/null 2>&1) &
+                spinner $!
             fi
             break
             ;;
