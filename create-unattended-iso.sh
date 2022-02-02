@@ -237,7 +237,7 @@ breakpoint #Debug breakpoint
 
 # download the ubuntu iso. If it already exists, do not delete in the end.
 cd $tmp
-debug_msg " :DEBUG: checking for $download_file"
+debug_msg " :DEBUG: checking for $download_file\n"
 if [[ ! -f $tmp/$download_file ]]; then
     debug_msg " :DEBUG: "
     echo -n " downloading $download_file: "
