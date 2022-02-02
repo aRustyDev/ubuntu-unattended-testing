@@ -230,12 +230,14 @@ while [[ "$password" != "$password2" ]]; do # check if the passwords match to pr
     read -sp " -- Confirm it again: " password2
     printf "\n"
 done
+debug_msg "         "
 read -ep " Make ISO bootable via USB: " -i "yes" bootable
 
 breakpoint #Debug breakpoint
 
 # download the ubuntu iso. If it already exists, do not delete in the end.
 cd $tmp
+debug_msg " :DEBUG: checking for $download_file"
 if [[ ! -f $tmp/$download_file ]]; then
     debug_msg " :DEBUG: "
     echo -n " downloading $download_file: "
@@ -256,7 +258,7 @@ if [[ ! -f $tmp/$download_file ]]; then
 fi
 
 breakpoint #Debug breakpoint
-debug_msg " :DEBUG: Checking for/Downloading preseed file\n"
+debug_msg " :DEBUG: checking for/Downloading preseed file\n"
 
 
 # download netson seed file
@@ -277,7 +279,7 @@ for i in $( echo rpm dpkg pacman ); do
     case $os in 
         # install required packages
         *dpkg)
-            debug_msg " :DEBUG: "
+            debug_msg " :DEBUG:"
             echo " installing required packages"
             if [ $(program_is_installed "mkpasswd") -eq 0 ] || [ $(program_is_installed "mkisofs") -eq 0 ]; then
                 (apt-get -y update > /dev/null 2>&1) &
@@ -307,7 +309,7 @@ for i in $( echo rpm dpkg pacman ); do
             break
             ;;
         *rpm)
-            debug_msg " :DEBUG: "
+            debug_msg " :DEBUG:"
             echo " installing required packages"
             (dpkg -y update > /dev/null 2>&1) &
             spinner $!
@@ -322,7 +324,7 @@ for i in $( echo rpm dpkg pacman ); do
         *pacman)
             debug_msg " : BTW : ..."
             echo " you're using Arch"
-            debug_msg " :DEBUG: "
+            debug_msg " :DEBUG:"
             echo " installing required packages"
             (pacman -Syu > /dev/null 2>&1) &
             spinner $!
@@ -347,30 +349,30 @@ debug_msg " :DEBUG: creating working folders\n"
 
 
 # create working folders
-debug_msg "         "
+debug_msg " :DEBUG:"
 echo " remastering your iso file"
 mkdir -p $tmp
-mkdir -p $tmp/iso_org
-mkdir -p $tmp/iso_new
+mkdir -p $tmp/iso-org
+mkdir -p $tmp/iso-new
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: mounting the image\n"
 
 
 # mount the image
-if grep -qs $tmp/iso_org /proc/mounts ; then
+if grep -qs $tmp/iso-org /proc/mounts ; then
     debug_msg "         "
     echo " image is already mounted, continue"
 else
-    (mount -o loop $tmp/$download_file $tmp/iso_org > /dev/null 2>&1)
+    (mount -o loop $tmp/$download_file $tmp/iso-org > /dev/null 2>&1)
 fi
 
 breakpoint #Debug breakpoint
-debug_msg " :DEBUG: copying iso contents to $tmp/iso_new\n"
+debug_msg " :DEBUG: copying iso contents to $tmp/iso-new\n"
 
 
 # copy the iso contents to the working directory
-(cp -rT $tmp/iso_org $tmp/iso_new > /dev/null 2>&1) &
+(cp -rT $tmp/iso-org $tmp/iso-new > /dev/null 2>&1) &
 spinner $!
 
 breakpoint #Debug breakpoint
@@ -378,9 +380,9 @@ debug_msg " :DEBUG: setting language\n"
 
 
 # set the language for the installation menu
-cd $tmp/iso_new
+cd $tmp/iso-new
 #doesn't work for 16.04
-echo en > $tmp/iso_new/isolinux/lang
+echo en > $tmp/iso-new/isolinux/lang
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: updating timeout settings\n"
@@ -388,7 +390,7 @@ debug_msg " :DEBUG: updating timeout settings\n"
 
 #16.04
 #taken from https://github.com/fries/prepare-ubuntu-unattended-install-iso/blob/master/make.sh
-sed -i -r 's/timeout\s+[0-9]+/timeout 1/g' $tmp/iso_new/isolinux/isolinux.cfg
+sed -i -r 's/timeout\s+[0-9]+/timeout 1/g' $tmp/iso-new/isolinux/isolinux.cfg
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: setting 'late' command\n"
@@ -399,10 +401,10 @@ debug_msg " :DEBUG: setting 'late' command\n"
    late_command="chroot /target curl -L -o /home/$username/start.sh https://raw.githubusercontent.com/netson/ubuntu-unattended/master/start.sh ;\
      chroot /target chmod +x /home/$username/start.sh ;"
 
-debug_msg " :DEBUG: copying the preseed file to $tmp/iso_new/preseed/$seed_file\n"
+debug_msg " :DEBUG: copying the preseed file to $tmp/iso-new/preseed/$seed_file\n"
 
 # copy the netson seed file to the iso
-cp -rT $tmp/$seed_file $tmp/iso_new/preseed/$seed_file
+cp -rT $tmp/$seed_file $tmp/iso-new/preseed/$seed_file
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: updating the preseed file\n"
@@ -411,7 +413,7 @@ debug_msg " :DEBUG: updating the preseed file\n"
 # include firstrun script
 echo "
 # setup firstrun script
-d-i preseed/late_command                                    string      $late_command" >> $tmp/iso_new/preseed/$seed_file
+d-i preseed/late_command                                    string      $late_command" >> $tmp/iso-new/preseed/$seed_file
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: generating password hash\n"
@@ -431,17 +433,17 @@ debug_msg " :DEBUG:   - timezone: $timezone\n"
 # update the seed file to reflect the users' choices
 # the normal separator for sed is /, but both the password and the timezone may contain it
 # so instead, I am using @
-sed -i "s@{{username}}@$username@g" $tmp/iso_new/preseed/$seed_file
-sed -i "s@{{pwhash}}@$pwhash@g" $tmp/iso_new/preseed/$seed_file
-sed -i "s@{{hostname}}@$hostname@g" $tmp/iso_new/preseed/$seed_file
-sed -i "s@{{timezone}}@$timezone@g" $tmp/iso_new/preseed/$seed_file
+sed -i "s@{{username}}@$username@g" $tmp/iso-new/preseed/$seed_file
+sed -i "s@{{pwhash}}@$pwhash@g" $tmp/iso-new/preseed/$seed_file
+sed -i "s@{{hostname}}@$hostname@g" $tmp/iso-new/preseed/$seed_file
+sed -i "s@{{timezone}}@$timezone@g" $tmp/iso-new/preseed/$seed_file
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: calculating checksum for seed file\n"
 
 
 # calculate checksum for seed file
-seed_checksum=$(md5sum $tmp/iso_new/preseed/$seed_file)
+seed_checksum=$(md5sum $tmp/iso-new/preseed/$seed_file)
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: adding the autoinstall option to the menu\n"
@@ -451,21 +453,21 @@ debug_msg " :DEBUG: adding the autoinstall option to the menu\n"
 sed -i "/label install/ilabel autoinstall\n\
   menu label ^Autoinstall NETSON Ubuntu Server\n\
   kernel /install/vmlinuz\n\
-  append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/netson.seed preseed/file/checksum=$seed_checksum --" $tmp/iso_new/isolinux/txt.cfg
+  append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/netson.seed preseed/file/checksum=$seed_checksum --" $tmp/iso-new/isolinux/txt.cfg
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: adding the autoinstall option to the menu for USB Boot\n"
 
 
 # add the autoinstall option to the menu for USB Boot
-sed -i '/set timeout=30/amenuentry "Autoinstall Netson Ubuntu Server" {\n\	set gfxpayload=keep\n\	linux /install/vmlinuz append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/netson.seed quiet ---\n\	initrd	/install/initrd.gz\n\}' $tmp/iso_new/boot/grub/grub.cfg
-sed -i -r 's/timeout=[0-9]+/timeout=1/g' $tmp/iso_new/boot/grub/grub.cfg
+sed -i '/set timeout=30/amenuentry "Autoinstall Netson Ubuntu Server" {\n\	set gfxpayload=keep\n\	linux /install/vmlinuz append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/netson.seed quiet ---\n\	initrd	/install/initrd.gz\n\}' $tmp/iso-new/boot/grub/grub.cfg
+sed -i -r 's/timeout=[0-9]+/timeout=1/g' $tmp/iso-new/boot/grub/grub.cfg
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG:"
 
 echo " creating the remastered iso"
-cd $tmp/iso_new
+cd $tmp/iso-new
 (mkisofs -D -r -V "NETSON_UBUNTU" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o $tmp/$new_iso_name . > /dev/null 2>&1) &
 spinner $!
 
@@ -479,16 +481,16 @@ fi
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: cleaning up\n"
-debug_msg " :DEBUG:   - unmounting : $tmp/iso_org\n"
-debug_msg " :DEBUG:   -   deleting : $tmp/iso_new\n"
-debug_msg " :DEBUG:   -   deleting : $tmp/iso_org\n"
+debug_msg " :DEBUG:   - unmounting : $tmp/iso-org\n"
+debug_msg " :DEBUG:   -   deleting : $tmp/iso-new\n"
+debug_msg " :DEBUG:   -   deleting : $tmp/iso-org\n"
 debug_msg " :DEBUG:   -   deleting : $tmphtml\n"
 
 
 # cleanup
-umount $tmp/iso_org
-rm -rf $tmp/iso_new
-rm -rf $tmp/iso_org
+umount $tmp/iso-org
+rm -rf $tmp/iso-new
+rm -rf $tmp/iso-org
 rm -rf $tmphtml
 
 
