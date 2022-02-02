@@ -188,9 +188,9 @@ while [ ${ubver} -lt ${MIN} ] || [ ${ubver} -gt ${MAX} ]; do
     read -p " please enter your preference: [${MIN}-${MAX}]: " ubver
 done
 
-download_file=$(grep -w ^$ubver ${WORKFILE} | awk '{print $4}')           # filename of the iso to be downloaded
-download_location=$(grep -w ^$ubver ${WORKFILE} | awk '{print $3}')     # location of the file to be downloaded
-new_iso_name="ubuntu-$(grep -w ^$ubver ${WORKFILE} | awk '{print $2}')-server-amd64-unattended.iso" # filename of the new iso file to be created
+download_file=$(grep -w "^$ubver" ${WORKFILE} | awk '{print $4}')           # filename of the iso to be downloaded
+download_location=$(grep -w "^$ubver" ${WORKFILE} | awk '{print $3}')     # location of the file to be downloaded
+new_iso_name="ubuntu-$(grep -w "^$ubver" ${WORKFILE} | awk '{print $2}')-server-amd64-unattended.iso" # filename of the new iso file to be created
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: getting default timezone info"
@@ -360,7 +360,7 @@ debug_msg " :DEBUG: mounting the image\n"
 
 
 # mount the image
-if grep -qs $tmp/iso-org /proc/mounts ; then
+if grep -qs "$tmp/iso-org" /proc/mounts ; then
     debug_msg "         "
     echo " image is already mounted, continue"
 else
@@ -372,7 +372,7 @@ debug_msg " :DEBUG: copying iso contents to $tmp/iso-new\n"
 
 
 # copy the iso contents to the working directory
-(cp -rT $tmp/iso-org $tmp/iso-new > /dev/null 2>&1) &
+(cp -r $tmp/iso-org/* $tmp/iso-new > /dev/null 2>&1) &
 spinner $!
 
 breakpoint #Debug breakpoint
