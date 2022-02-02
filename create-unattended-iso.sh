@@ -141,16 +141,14 @@ read -sp " please enter your preferred password: " password
 printf "\n"
 read -sp " confirm your preferred password: " password2
 printf "\n"
-read -ep " Make ISO bootable via USB: " -i "yes" bootable
-
-# check if the passwords match to prevent headaches
-while [[ "$password" != "$password2" ]]; do
+while [[ "$password" != "$password2" ]]; do # check if the passwords match to prevent headaches
     echo " Ope! Your passwords didn't match"
     read -sp " --   Enter it again: " password
     printf "\n"
     read -sp " -- Confirm it again: " password2
     printf "\n"
 done
+read -ep " Make ISO bootable via USB: " -i "yes" bootable
 
 # download the ubuntu iso. If it already exists, do not delete in the end.
 cd $tmp
