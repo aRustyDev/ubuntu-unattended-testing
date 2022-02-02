@@ -71,7 +71,7 @@ echo
 DEBUG=false
 while [ "$1" != "" ]; do
     case $1 in
-    --skip-verification)
+    --debug)
         DEBUG=true
         ;;
     -h | --help)
