@@ -60,6 +60,28 @@ function usage {
     echo " +--------------------------------------------------------+"
 }
 
+function breakpoint {
+    if [DEBUG]; then
+        echo " +---------------------------+"
+        echo " | press any key to continue |"
+        echo " +---------------------------+"
+        while [ true ] ; do
+            read -t 3 -n 1
+            # if input == ESC key
+            if [ $? = 0 ];
+                then
+                break;
+            fi
+        done
+    fi
+}
+
+function debug_msg {
+    if [DEBUG]; then
+        printf $1
+    fi
+}
+
 # print a pretty header
 echo
 echo " +---------------------------------------------------+"
@@ -85,10 +107,17 @@ while [ "$1" != "" ]; do
 done
 
 # ask if script runs without sudo or root priveleges
+
+debug_msg " is currentuser root?"
+
 if [ $currentuser != "root" ]; then
-    echo " you need sudo privileges to run this script, or run it as root"
+    printf "\n :ERROR: you need sudo privileges to run this script, or run it as root\n"
     exit 1
+else
+    debug_msg " : TRUE\n"
 fi
+
+breakpoint #Debug breakpoint
 
 #check that we are in ubuntu 16.04+
 
@@ -98,14 +127,20 @@ case "$(lsb_release -rs)" in
 esac
 
 #get the latest versions of Ubuntu LTS
+debug_msg " getting latest versions of ubuntu"
 
 tmphtml=$tmp/tmphtml
 rm $tmphtml >/dev/null 2>&1
 wget -O $tmphtml 'http://releases.ubuntu.com/' >/dev/null 2>&1
 
+debug_msg " : DONE\n"
+breakpoint #Debug breakpoint
+
 # create the menu based on available versions from
 # http://cdimage.ubuntu.com/releases/
 # http://releases.ubuntu.com/
+
+debug_msg " generating menu\n"
 
 WORKFILE=www.list
 EXCLUDE_LIST='torrent|zsync|live'
@@ -138,6 +173,8 @@ if [ ! -e ${WORKFILE} ]; then
      done | uniq
 fi
 
+breakpoint #Debug breakpoint
+
 # display the menu for user to select version
 echo
 MIN=1
@@ -157,6 +194,8 @@ download_file=$(grep -w ^$ubver ${WORKFILE} | awk '{print $4}')           # file
 download_location=$(grep -w ^$ubver ${WORKFILE} | awk '{print $3}')     # location of the file to be downloaded
 new_iso_name="ubuntu-$(grep -w ^$ubver ${WORKFILE} | awk '{print $2}')-server-amd64-unattended.iso" # filename of the new iso file to be created
 
+breakpoint #Debug breakpoint
+
 if [ -f /etc/timezone ]; then
   timezone=`cat /etc/timezone`
 elif [ -h /etc/localtime ]; then
@@ -165,6 +204,8 @@ else
   checksum=`md5sum /etc/localtime | cut -d' ' -f1`
   timezone=`find /usr/share/zoneinfo/ -type f -exec md5sum {} \; | grep "^$checksum" | sed "s/.*\/usr\/share\/zoneinfo\///" | head -n 1`
 fi
+
+breakpoint #Debug breakpoint
 
 # ask the user questions about his/her preferences
 read -ep " please enter your preferred timezone: " -i "${timezone}" timezone
@@ -182,6 +223,8 @@ while [[ "$password" != "$password2" ]]; do # check if the passwords match to pr
 done
 read -ep " Make ISO bootable via USB: " -i "yes" bootable
 
+breakpoint #Debug breakpoint
+
 # download the ubuntu iso. If it already exists, do not delete in the end.
 cd $tmp
 if [[ ! -f $tmp/$download_file ]]; then
@@ -197,12 +240,16 @@ if [[ ! -f $tmp/$download_file ]]; then
     exit 1
 fi
 
+breakpoint #Debug breakpoint
+
 # download netson seed file
 seed_file="netson.seed"
 if [[ ! -f $tmp/$seed_file ]]; then
     echo -n " downloading $seed_file: "
     download "https://raw.githubusercontent.com/netson/ubuntu-unattended/master/$seed_file"
 fi
+
+breakpoint #Debug breakpoint
 
 # Check which OS
 for i in $( echo rpm dpkg pacman ); do 
@@ -284,7 +331,7 @@ for i in $( echo rpm dpkg pacman ); do
 done 2> /dev/null
 
 
-
+breakpoint #Debug breakpoint
 
 
 # create working folders
@@ -293,6 +340,8 @@ mkdir -p $tmp
 mkdir -p $tmp/iso_org
 mkdir -p $tmp/iso_new
 
+breakpoint #Debug breakpoint
+
 # mount the image
 if grep -qs $tmp/iso_org /proc/mounts ; then
     echo " image is already mounted, continue"
@@ -300,19 +349,26 @@ else
     (mount -o loop $tmp/$download_file $tmp/iso_org > /dev/null 2>&1)
 fi
 
+breakpoint #Debug breakpoint
+
 # copy the iso contents to the working directory
 (cp -rT $tmp/iso_org $tmp/iso_new > /dev/null 2>&1) &
 spinner $!
+
+breakpoint #Debug breakpoint
 
 # set the language for the installation menu
 cd $tmp/iso_new
 #doesn't work for 16.04
 echo en > $tmp/iso_new/isolinux/lang
 
+breakpoint #Debug breakpoint
+
 #16.04
 #taken from https://github.com/fries/prepare-ubuntu-unattended-install-iso/blob/master/make.sh
 sed -i -r 's/timeout\s+[0-9]+/timeout 1/g' $tmp/iso_new/isolinux/isolinux.cfg
 
+breakpoint #Debug breakpoint
 
 # set late command
 
@@ -322,13 +378,19 @@ sed -i -r 's/timeout\s+[0-9]+/timeout 1/g' $tmp/iso_new/isolinux/isolinux.cfg
 # copy the netson seed file to the iso
 cp -rT $tmp/$seed_file $tmp/iso_new/preseed/$seed_file
 
+breakpoint #Debug breakpoint
+
 # include firstrun script
 echo "
 # setup firstrun script
 d-i preseed/late_command                                    string      $late_command" >> $tmp/iso_new/preseed/$seed_file
 
+breakpoint #Debug breakpoint
+
 # generate the password hash
 pwhash=$(echo $password | mkpasswd -s -m sha-512)
+
+breakpoint #Debug breakpoint
 
 # update the seed file to reflect the users' choices
 # the normal separator for sed is /, but both the password and the timezone may contain it
@@ -338,14 +400,20 @@ sed -i "s@{{pwhash}}@$pwhash@g" $tmp/iso_new/preseed/$seed_file
 sed -i "s@{{hostname}}@$hostname@g" $tmp/iso_new/preseed/$seed_file
 sed -i "s@{{timezone}}@$timezone@g" $tmp/iso_new/preseed/$seed_file
 
+breakpoint #Debug breakpoint
+
 # calculate checksum for seed file
 seed_checksum=$(md5sum $tmp/iso_new/preseed/$seed_file)
+
+breakpoint #Debug breakpoint
 
 # add the autoinstall option to the menu
 sed -i "/label install/ilabel autoinstall\n\
   menu label ^Autoinstall NETSON Ubuntu Server\n\
   kernel /install/vmlinuz\n\
   append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/netson.seed preseed/file/checksum=$seed_checksum --" $tmp/iso_new/isolinux/txt.cfg
+
+breakpoint #Debug breakpoint
 
 # add the autoinstall option to the menu for USB Boot
 sed -i '/set timeout=30/amenuentry "Autoinstall Netson Ubuntu Server" {\n\	set gfxpayload=keep\n\	linux /install/vmlinuz append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/netson.seed quiet ---\n\	initrd	/install/initrd.gz\n\}' $tmp/iso_new/boot/grub/grub.cfg
@@ -356,10 +424,14 @@ cd $tmp/iso_new
 (mkisofs -D -r -V "NETSON_UBUNTU" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o $tmp/$new_iso_name . > /dev/null 2>&1) &
 spinner $!
 
+breakpoint #Debug breakpoint
+
 # make iso bootable (for dd'ing to  USB stick)
 if [[ $bootable == "yes" ]] || [[ $bootable == "y" ]]; then
     isohybrid $tmp/$new_iso_name
 fi
+
+breakpoint #Debug breakpoint
 
 # cleanup
 umount $tmp/iso_org
