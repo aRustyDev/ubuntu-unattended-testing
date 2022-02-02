@@ -45,12 +45,44 @@ function program_is_installed {
     echo $return_
 }
 
+function usage {
+    echo " +--------------------------------------------------------+"
+    echo " |                                                        |"
+    echo " | --debug        step through the script, await <enter>  |"
+    echo " | --help, -h     displays this output                    |"
+    echo " |                                                        |"
+    echo " | Example:                                               |"
+    echo " |    1)  ./create-unattended-iso.sh                      |"
+    echo " |    2)  ./create-unattended-iso.sh --debug              |"
+    echo " |    3)  ./create-unattended-iso.sh --h                  |"
+    echo " |    4)  ./create-unattended-iso.sh --help               |"
+    echo " |                                                        |"
+    echo " +--------------------------------------------------------+"
+}
+
 # print a pretty header
 echo
 echo " +---------------------------------------------------+"
 echo " |            UNATTENDED UBUNTU ISO MAKER            |"
 echo " +---------------------------------------------------+"
 echo
+
+# Get Flags/Arguments
+DEBUG=false
+while [ "$1" != "" ]; do
+    case $1 in
+    --skip-verification)
+        DEBUG=true
+        ;;
+    -h | --help)
+        usage # run usage function
+        ;;
+    *)
+        continue
+        ;;
+    esac
+    shift # remove the current value for `$1` and use the next
+done
 
 # ask if script runs without sudo or root priveleges
 if [ $currentuser != "root" ]; then
