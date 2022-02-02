@@ -199,7 +199,7 @@ for i in $( echo rpm dpkg pacman ); do
                 fi
                 fi
             fi
-            exit
+            break
             ;;
         *rpm)
             echo "rpm"
@@ -222,7 +222,7 @@ for i in $( echo rpm dpkg pacman ); do
                 fi
                 fi
             fi
-            exit
+            break
             ;;
         *pacman)
             echo "BTW ... you're using Arch"
@@ -245,7 +245,7 @@ for i in $( echo rpm dpkg pacman ); do
                 fi
                 fi
             fi
-            exit
+            break
             ;;
         *)
             continue
