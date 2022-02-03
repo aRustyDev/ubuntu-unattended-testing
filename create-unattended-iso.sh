@@ -357,13 +357,18 @@ mkdir -p $tmp/iso-new
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: mounting the image\n"
-
+out_var=$(grep -qs "$tmp/iso-org" /proc/mounts)
+debug_msg " :DEBUG: Output ${out_var}"
 
 # mount the image
 if grep -qs "$tmp/iso-org" /proc/mounts ; then
     debug_msg "         "
     echo " image is already mounted, continue"
 else
+    out_var=$(ls -al $tmp/$download_file)
+    debug_msg " :DEBUG: Output : ls -al $tmp/$download_file \n${out_var}"
+    out_var=$(ls -al $tmp/iso-org)
+    debug_msg " :DEBUG: Output : ls -al $tmp/iso-org \n${out_var}"
     (mount -o loop $tmp/$download_file $tmp/iso-org > /dev/null 2>&1)
 fi
 
@@ -372,8 +377,12 @@ debug_msg " :DEBUG: copying iso contents to $tmp/iso-new\n"
 
 
 # copy the iso contents to the working directory
+out_var=$(ls -al $tmp/iso-new)
+debug_msg " :DEBUG: Output : ls -al $tmp/iso-new (Before)\n${out_var}"
 (cp -r $tmp/iso-org/* $tmp/iso-new > /dev/null 2>&1) &
 spinner $!
+out_var=$(ls -al $tmp/iso-new)
+debug_msg " :DEBUG: Output : ls -al $tmp/iso-new (After)\n${out_var}"
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: setting language\n"
@@ -382,7 +391,7 @@ debug_msg " :DEBUG: setting language\n"
 # set the language for the installation menu
 cd $tmp/iso-new
 #doesn't work for 16.04
-echo en > $tmp/iso-new/isolinux/lang
+echo "en" > $tmp/iso-new/isolinux/lang
 
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: updating timeout settings\n"
@@ -398,8 +407,8 @@ debug_msg " :DEBUG: setting 'late' command\n"
 
 # set late command
 
-   late_command="chroot /target curl -L -o /home/$username/start.sh https://raw.githubusercontent.com/netson/ubuntu-unattended/master/start.sh ;\
-     chroot /target chmod +x /home/$username/start.sh ;"
+late_command="chroot /target curl -L -o /home/$username/start.sh https://raw.githubusercontent.com/netson/ubuntu-unattended/master/start.sh ;\
+    chroot /target chmod +x /home/$username/start.sh ;"
 
 debug_msg " :DEBUG: copying the preseed file to $tmp/iso-new/preseed/$seed_file\n"
 
