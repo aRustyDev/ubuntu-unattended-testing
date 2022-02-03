@@ -379,7 +379,7 @@ debug_msg " :DEBUG: copying iso contents to $tmp/iso-new\n"
 # copy the iso contents to the working directory
 out_var=$(ls -al $tmp/iso-new)
 debug_msg " :DEBUG: Output : ls -al $tmp/iso-new (Before)\n${out_var}"
-(cp -r $tmp/iso-org/* $tmp/iso-new > /dev/null 2>&1) &
+(cp -r $tmp/iso-org/* $tmp/iso-new 2>/dev/null) &
 spinner $!
 out_var=$(ls -al $tmp/iso-new)
 debug_msg " :DEBUG: Output : ls -al $tmp/iso-new (After)\n${out_var}"
