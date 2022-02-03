@@ -369,7 +369,7 @@ else
     debug_msg " :DEBUG: Output : ls -al $tmp/$download_file \n${out_var}\n"
     out_var=$(ls -al $tmp/iso-org)
     debug_msg " :DEBUG: Output : ls -al $tmp/iso-org \n${out_var}\n"
-    (mount -o loop $tmp/$download_file $tmp/iso-org > /dev/null 2>&1)
+    (mount -o loop $tmp/$download_file $tmp/iso-org 2> /dev/null)
 fi
 
 breakpoint #Debug breakpoint
