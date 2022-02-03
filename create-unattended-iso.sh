@@ -358,7 +358,7 @@ mkdir -p $tmp/iso-new
 breakpoint #Debug breakpoint
 debug_msg " :DEBUG: mounting the image\n"
 out_var=$(grep -qs "$tmp/iso-org" /proc/mounts)
-debug_msg " :DEBUG: Output ${out_var}"
+debug_msg " :DEBUG: Output ${out_var}\n"
 
 # mount the image
 if grep -qs "$tmp/iso-org" /proc/mounts ; then
@@ -366,9 +366,9 @@ if grep -qs "$tmp/iso-org" /proc/mounts ; then
     echo " image is already mounted, continue"
 else
     out_var=$(ls -al $tmp/$download_file)
-    debug_msg " :DEBUG: Output : ls -al $tmp/$download_file \n${out_var}"
+    debug_msg " :DEBUG: Output : ls -al $tmp/$download_file \n${out_var}\n"
     out_var=$(ls -al $tmp/iso-org)
-    debug_msg " :DEBUG: Output : ls -al $tmp/iso-org \n${out_var}"
+    debug_msg " :DEBUG: Output : ls -al $tmp/iso-org \n${out_var}\n"
     (mount -o loop $tmp/$download_file $tmp/iso-org > /dev/null 2>&1)
 fi
 
